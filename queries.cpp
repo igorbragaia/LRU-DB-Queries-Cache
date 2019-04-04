@@ -82,10 +82,6 @@ public:
     }
   }
 
-  void enableCache(){
-    cache = true;
-  }
-
   void writeLog(string path){
     ofstream myfile;
     string file_name = cache?"logCacheEnabled.txt":"logCacheDisabled.txt";
@@ -96,11 +92,23 @@ public:
         myfile << elm << endl;
     myfile.close();
   }
+
+  int avgResponseTime(){
+    int sum=0;
+    for(int i=1;i<(int)log.size();i++)
+      sum += log[i] - log[0];
+    return sum/(int)log.size();
+  }
+
+  void enableCache(){
+    cache = true;
+  }
 };
 
 
 int main()
 {
+    srand (time(NULL));
     if (mkdir("log", 0777) == -1)
       cerr << "Log directory Error :  " << strerror(errno) << endl;
     else
@@ -127,7 +135,7 @@ int main()
       cout << "iteration " << i << " done" << endl;
     }
     postgres.writeLog(path);
-    cout << endl;
+    cout << "Average query time:" << postgres.avgResponseTime() << endl;
 
     Postgres postgres2(true);
     response =   vector<vector<string> >();
@@ -138,7 +146,7 @@ int main()
       cout << "iteration " << i << " done" << endl;
     }
     postgres2.writeLog(path);
-    cout << endl;
+    cout << "Average query time:" << postgres2.avgResponseTime() << endl;
 
     // OUTPUT EXAMPLE - data can be seen also at https://goo.gl/oeRbiQ
     // 17 Luis Alberto Bragaia luis.bragaia@terra.com.br
