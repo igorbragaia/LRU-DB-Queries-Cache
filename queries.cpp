@@ -93,7 +93,7 @@ public:
     myfile.close();
   }
 
-  int avgResponseTime(){
+  int avgClockTicksPerSecond(){
     int sum=0;
     for(int i=1;i<(int)log.size();i++)
       sum += log[i] - log[0];
@@ -135,7 +135,7 @@ int main()
       cout << "iteration " << i << " done" << endl;
     }
     postgres.writeLog(path);
-    cout << "Average query time:" << postgres.avgResponseTime() << endl;
+    cout << "Average clock ticks per second:" << postgres.avgClockTicksPerSecond() << endl;
 
     Postgres postgres2(true);
     response =   vector<vector<string> >();
@@ -146,7 +146,7 @@ int main()
       cout << "iteration " << i << " done" << endl;
     }
     postgres2.writeLog(path);
-    cout << "Average query time:" << postgres2.avgResponseTime() << endl;
+    cout << "Average clock ticks per second:" << postgres2.avgClockTicksPerSecond() << endl;
 
     // OUTPUT EXAMPLE - data can be seen also at https://goo.gl/oeRbiQ
     // 17 Luis Alberto Bragaia luis.bragaia@terra.com.br
