@@ -29,8 +29,8 @@ In applications that have database which supports high amount of queries, it is 
 In order to realize this query caching project, team choosed to implement a LRU - Least Recently Used cache, which basically consists of a data structure that supports two operations. They are
 
 * **get(key)** returns value cached for given key. It will be a SQL query string
-* **put(key, value)** caches a SQL query string in its respective response
+* **put(key, value)** caches a SQL query string and its respective response
 
-Note that LRU Cache has a maximum data to be cached in order to avoid stack overflow so no queried elements are dropped once cache gets full. Furthermore, this cache is implemented using linked lists and hash tables in order to accomplish an amortized look up and update times.
+Note that LRU Cache has a maximum data to be cached in order to avoid stack overflow so no queried elements are dropped once cache gets full. Furthermore, this cache is implemented using linked lists and hash tables in order to accomplish an amortized look up and update time complexities.
 
-Finally, this project has been implemented in C++, interacting with Postgres database deployed in production environment through Heroku. There is algo a ReactJS+NodeJS simple web app that allows database viewing and editing, look at [https://goo.gl/oeRbiQ](https://goo.gl/oeRbiQ).
+Finally, this project has been implemented in C++, interacting with Postgres database deployed in production environment through Heroku. There is algo a ReactJS+NodeJS simple web app that allows database ata dviewing and editing, look at [https://goo.gl/oeRbiQ](https://goo.gl/oeRbiQ).
