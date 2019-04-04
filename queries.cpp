@@ -1,4 +1,6 @@
 #include<bits/stdc++.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include<pqxx/pqxx>
 using namespace std;
 
@@ -31,6 +33,7 @@ private:
   string connection_str;
   LRUcache lru_cache;
   bool cache;
+  vector<unsigned int>log;
 public:
   Postgres(bool _cache){
     string host = getenv ("HOST_NODECRUD");
@@ -42,8 +45,10 @@ public:
   }
 
   vector<vector<string> > executeQuery(string query){
-    if(cache and lru_cache.hasKey(query))
+    if(cache and lru_cache.hasKey(query)){
+      log.push_back(clock());
       return lru_cache.get(query);
+    }
 
     vector<vector<string> > output;
     vector<string> single_output;
@@ -64,6 +69,8 @@ public:
     {
         cerr << e.what() << std::endl;
     }
+
+    log.push_back(clock());
     return output;
   }
 
@@ -78,47 +85,61 @@ public:
   void enableCache(){
     cache = true;
   }
+
+  vector<unsigned int>writeLog(string path){
+    ofstream myfile;
+    string file_name = cache?"logCacheEnabled.txt":"logCacheDisabled.txt";
+    file_name = path + "/" + file_name;
+    cout << file_name << endl;
+    myfile.open (file_name);
+    if(log.size())
+      for(unsigned int elm:log)
+        myfile << elm << endl;
+    myfile.close();
+  }
 };
 
 
 int main()
 {
+    if (mkdir("log", 0777) == -1)
+      cerr << "Log directory Error :  " << strerror(errno) << endl;
+    else
+      cout << "Log Directory created" << endl;
+
+    int id = rand()%2019;
+    string path = "log/" + to_string(id);
+    // Creating a directory
+    cout << path << endl;
+    if (mkdir(path.c_str(), 0777) == -1){
+      cerr << "Error :  " << strerror(errno) << endl;
+      return 1;
+    }
+    else
+      cout << "Directory created" << endl;
+
     string query = "SELECT id, name, email  FROM users";
     Postgres postgres(false);
     vector<vector<string> > response;
-    clock_t time_a, time_b;
-    unsigned int total_time_ticks;
-
     cout << "Starting no caching queries" << endl;
-    time_a = clock();
-    response = postgres.executeQuery(query);
-    // postgres.printQueryOutput(response);
-    time_b = clock();
-    total_time_ticks = (unsigned int)(time_b - time_a);
-    cout << "Query without cache took " << total_time_ticks << " ms" << endl;
+    for(int i=0;i<10;i++){
+      response = postgres.executeQuery(query);
+      // postgres.printQueryOutput(response);
+      cout << "iteration " << i << " done" << endl;
+    }
+    postgres.writeLog(path);
+    cout << endl;
 
-    time_a = clock();
-    response = postgres.executeQuery(query);
-    // postgres.printQueryOutput(response);
-    time_b = clock();
-    total_time_ticks = (unsigned int)(time_b - time_a);
-    cout << "Query without cache took " << total_time_ticks << " ms" << endl;
-
+    Postgres postgres2(true);
+    response =   vector<vector<string> >();
     cout << "Starting caching queries" << endl;
-    postgres.enableCache();
-    time_a = clock();
-    response = postgres.executeQuery(query);
-    // postgres.printQueryOutput(response);
-    time_b = clock();
-    total_time_ticks = (unsigned int)(time_b - time_a);
-    cout << "Query with cache took " << total_time_ticks << " ms" << endl;
-
-    time_a = clock();
-    response = postgres.executeQuery(query);
-    // postgres.printQueryOutput(response);
-    time_b = clock();
-    total_time_ticks = (unsigned int)(time_b - time_a);
-    cout << "Query with cache took " << total_time_ticks << " ms" << endl;
+    for(int i=0;i<10;i++){
+      response = postgres2.executeQuery(query);
+      // postgres.printQueryOutput(response);
+      cout << "iteration " << i << " done" << endl;
+    }
+    postgres2.writeLog(path);
+    cout << endl;
 
     // OUTPUT EXAMPLE - data can be seen also at https://goo.gl/oeRbiQ
     // 17 Luis Alberto Bragaia luis.bragaia@terra.com.br
