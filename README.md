@@ -14,7 +14,7 @@ $ echo "export PASSWORD_NODECRUD=\"xxx\"" >> ~/.bashrc
 $ ./setup.sh
 ```
 
-* Run c++ script
+* Run c++ script:
 ```bash
 $ ./compile_and_run.sh helloworld.cpp
 ```
