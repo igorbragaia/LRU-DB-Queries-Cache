@@ -24,11 +24,13 @@ Project developed by [Igor Bragaia](https://github.com/igorbragaia) and [Luiz Fe
 
 **Professor [Cecília de Azevedo Castro César](http://www.comp.ita.br/~cecilia/index.html)**
 
-Em aplicações que possuem bancos de dados que suportam grande quantidade de queries, é comum consultas repetidas serem feitas constantemente. Um exemplo disso é a página de entrada de um website que exibe em sua principal página uma série de dados do banco de dados. A medida que essas consultas tornem-se dispendiosas computacionalmente, é razoável considerar um cache de queries, de forma que a concorrência de consultas não será diminuída - pois as consultas ao cache ainda se fazem necessárias - mas passarão a ter um tempo de look up constante e muito menor que o tempo da query em si.
-Para a realização do projeto de queries cache, optou-se por um cache do tipo LRU - Least Recently Used, que consiste basicamente de uma estrutura de dados que suporta duas operações:
+In applications that have database which supports high amount of queries, it is common repeated ones often. An example is a main webpage from an website that displays some information retrieved from database got through an async fetch everytime webpage loads. As queries get heavy computionally, it is reasonable consider a queries caching which can return responses highly quicker than querying database in fact.
 
-* **get(key)** retorna o valor armazenado para dada key. No contexto de queries cache, a chave será uma string de query SQL.
-* **put(key, value)** adiciona uma query SQL (key) e seu respectivo response (value) ao cache.
+In order to realize this query caching project, team choosed to implement a LRU - Least Recently Used cache, which basically consists of a data structure that supports two operations. They are
 
-Nota-se que o LRU Cache possui uma quantidade máximas de keys a serem armazenadas e a medida que o cache atinge sua capacidade, os itens menos consultados são descartados. Além disso, o cache é implementado por meio de listas ligadas e hash tables, de forma que a complexidade de tempo para look up e updates é aproximadamente constante.
-Por fim, o projeto foi implementado em linguagem C++, interagindo com um banco de dados PostgreSQL em produção deployado por meio do Heroku. O banco de dados pode ser acessado interativamente em https://goo.gl/oeRbiQ , página web desenvolvida em ReactJS e NodeJS para facilitar debugging e avaliação do professor. As consultas multi-threaded, por sua vez, são otimizadas por meio do cache das consultas feitas mais frequentemente ao banco de dados. No presente projeto apresentam-se gráficos comparativos entre o desempenho com e sem o uso do cache para consultas sucessivas e repetidas ao banco de dados remoto demonstrando a validade do protótipo desenvolvido.
+* **get(key)** returns value cached for given key. It will be a SQL query string
+* **put(key, value)** caches a SQL query string in its respective response
+
+Note that LRU Cache has a maximum data to be cached in order to avoid stack overflow so no queried elements are dropped once cache gets full. Furthermore, this cache is implemented using linked lists and hash tables in order to accomplish an amortized look up and update times.
+
+Finally, this project has been implemented in C++, interacting with Postgres database deployed in production environment through Heroku. There is algo a ReactJS+NodeJS simple web app that allows database viewing and editing, look at [https://goo.gl/oeRbiQ](https://goo.gl/oeRbiQ).
