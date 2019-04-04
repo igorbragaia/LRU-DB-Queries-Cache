@@ -12,7 +12,7 @@ public:
     string dbname = getenv ("DATABASE_NODECRUD");
     string user = getenv ("USER_NODECRUD");
     string password = getenv ("PASSWORD_NODECRUD");
-    this->connection_str = "host='"+ host + "' port='5432' dbname='"+ dbname +"' user='"+ user +"' password='" + password +"'";
+    connection_str = "host='"+ host + "' port='5432' dbname='"+ dbname +"' user='"+ user +"' password='" + password +"'";
   }
 
   vector<vector<string> > executeQuery(string query){
