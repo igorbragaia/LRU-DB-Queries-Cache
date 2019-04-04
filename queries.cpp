@@ -74,30 +74,51 @@ public:
       cout << endl;
     }
   }
+
+  void enableCache(){
+    cache = true;
+  }
 };
 
 
 int main()
 {
     string query = "SELECT id, name, email  FROM users";
-    Postgres postgres(true);
+    Postgres postgres(false);
     vector<vector<string> > response;
     clock_t time_a, time_b;
     unsigned int total_time_ticks;
 
+    cout << "Starting no caching queries" << endl;
     time_a = clock();
     response = postgres.executeQuery(query);
-    postgres.printQueryOutput(response);
+    // postgres.printQueryOutput(response);
     time_b = clock();
     total_time_ticks = (unsigned int)(time_b - time_a);
-    cout << total_time_ticks << " ms" << endl;
+    cout << "Query without cache took " << total_time_ticks << " ms" << endl;
 
     time_a = clock();
     response = postgres.executeQuery(query);
-    postgres.printQueryOutput(response);
+    // postgres.printQueryOutput(response);
     time_b = clock();
     total_time_ticks = (unsigned int)(time_b - time_a);
-    cout << total_time_ticks << " ms" << endl;
+    cout << "Query without cache took " << total_time_ticks << " ms" << endl;
+
+    cout << "Starting caching queries" << endl;
+    postgres.enableCache();
+    time_a = clock();
+    response = postgres.executeQuery(query);
+    // postgres.printQueryOutput(response);
+    time_b = clock();
+    total_time_ticks = (unsigned int)(time_b - time_a);
+    cout << "Query with cache took " << total_time_ticks << " ms" << endl;
+
+    time_a = clock();
+    response = postgres.executeQuery(query);
+    // postgres.printQueryOutput(response);
+    time_b = clock();
+    total_time_ticks = (unsigned int)(time_b - time_a);
+    cout << "Query with cache took " << total_time_ticks << " ms" << endl;
 
     // OUTPUT EXAMPLE - data can be seen also at https://goo.gl/oeRbiQ
     // 17 Luis Alberto Bragaia luis.bragaia@terra.com.br
