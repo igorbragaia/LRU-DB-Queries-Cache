@@ -86,11 +86,10 @@ public:
     cache = true;
   }
 
-  vector<unsigned int>writeLog(string path){
+  void writeLog(string path){
     ofstream myfile;
     string file_name = cache?"logCacheEnabled.txt":"logCacheDisabled.txt";
     file_name = path + "/" + file_name;
-    cout << file_name << endl;
     myfile.open (file_name);
     if(log.size())
       for(unsigned int elm:log)
