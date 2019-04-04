@@ -1,6 +1,6 @@
 #include<bits/stdc++.h>
-#include <sys/stat.h>
-#include <sys/types.h>
+#include<sys/stat.h>
+#include<sys/types.h>
 #include<pqxx/pqxx>
 using namespace std;
 
@@ -66,9 +66,7 @@ public:
           lru_cache.put(query, output);
     }
     catch(const exception &e)
-    {
         cerr << e.what() << std::endl;
-    }
 
     log.push_back(clock());
     return output;
@@ -87,9 +85,8 @@ public:
     string file_name = cache?"logCacheEnabled.txt":"logCacheDisabled.txt";
     file_name = path + "/" + file_name;
     myfile.open (file_name);
-    if(log.size())
-      for(unsigned int elm:log)
-        myfile << elm << endl;
+    for(unsigned int elm:log)
+      myfile << elm << endl;
     myfile.close();
   }
 
