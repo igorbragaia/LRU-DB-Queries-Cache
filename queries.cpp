@@ -1,7 +1,9 @@
 #include<bits/stdc++.h>
+#include<string>
 #include<sys/stat.h>
 #include<sys/types.h>
 #include<pqxx/pqxx>
+#include <cstdlib>
 using namespace std;
 
 
@@ -36,11 +38,16 @@ private:
   vector<unsigned int>log;
 public:
   Postgres(bool _cache){
-    string host = getenv ("HOST_NODECRUD");
-    string dbname = getenv ("DATABASE_NODECRUD");
-    string user = getenv ("USER_NODECRUD");
-    string password = getenv ("PASSWORD_NODECRUD");
-    connection_str = "host='"+ host + "' port='5432' dbname='"+ dbname +"' user='"+ user +"' password='" + password +"'";
+    try{
+      string host = getenv("HOST_NODECRUD");
+      string dbname = getenv ("DATABASE_NODECRUD");
+      string user = getenv ("USER_NODECRUD");
+      string password = getenv ("PASSWORD_NODECRUD");
+      connection_str = "host='"+ host + "' port='5432' dbname='"+ dbname +"' user='"+ user +"' password='" + password +"'";
+    }
+    catch(const std::exception &e){
+      cerr << "ERROR: environment variables not set!" << std::endl;
+    }
     cache = _cache;
   }
 
@@ -65,8 +72,9 @@ public:
         if(cache)
           lru_cache.put(query, output);
     }
-    catch(const exception &e)
-        cerr << e.what() << std::endl;
+    catch(const std::exception &e){
+      cerr << e.what() << std::endl;
+    }
 
     log.push_back(clock());
     return output;
