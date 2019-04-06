@@ -1,9 +1,7 @@
 #include<bits/stdc++.h>
-#include<string>
 #include<sys/stat.h>
 #include<sys/types.h>
 #include<pqxx/pqxx>
-#include <cstdlib>
 using namespace std;
 
 
@@ -39,7 +37,7 @@ private:
 public:
   Postgres(bool _cache){
     try{
-      string host = getenv("HOST_NODECRUD");
+      string host = getenv ("HOST_NODECRUD");
       string dbname = getenv ("DATABASE_NODECRUD");
       string user = getenv ("USER_NODECRUD");
       string password = getenv ("PASSWORD_NODECRUD");
@@ -72,8 +70,8 @@ public:
         if(cache)
           lru_cache.put(query, output);
     }
-    catch(const std::exception &e){
-      cerr << e.what() << std::endl;
+    catch(const exception &e){
+      cerr << e.what() << endl;
     }
 
     log.push_back(clock());
