@@ -38,7 +38,7 @@ $ echo "export PASSWORD_NODECRUD=\"xxx\"" >> ~/.bashrc
 $ ./setup.sh
 ```
 
-* Run c++ script:
+* Run C++ script:
 ```bash
 $ ./compile_and_run.sh queries.cpp
 ```
