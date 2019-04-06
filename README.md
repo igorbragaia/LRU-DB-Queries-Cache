@@ -1,8 +1,11 @@
-# Least Recently Used Database Queries Cache for multi-threaded environment
+#LRU-DB-Queries-Cache
+
+Least Recently Used Database Queries Cache for multi-threaded environment
 
 ## About
 
-<img align="left" src="assets/ita.png" alt="alt text" width="40px">
+<img align="left" src="assets/ita.png" alt="alt text" width="60px">
+
 Project developed by [Igor Bragaia](https://github.com/igorbragaia) and [Luiz Felipe Schiaveto](https://github.com/luizfschiaveto) for CES-33 - Operational Systems college course
 
 **Professor [Cecília de Azevedo Castro César](http://www.comp.ita.br/~cecilia/index.html)**
@@ -20,7 +23,7 @@ Finally, this project has been implemented in C++, interacting with Postgres dat
 
 ## Running project
 
-* Postgres setup: make sure you set all environment variables as example following
+* Postgres setup: make sure you set all environment variables as example following and queries are reasonable for this database
 ```bash
 $ echo "export USER_NODECRUD=\"xxx\"" >> ~/.bashrc
 $ echo "export HOST_NODECRUD=\"xxx\"" >> ~/.bashrc
