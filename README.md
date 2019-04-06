@@ -23,6 +23,8 @@ Finally, this project has been implemented in C++, interacting with Postgres dat
 
 ## Running project
 
+* Code: GitHub repository [here](https://github.com/igorbragaia/LRU-DB-Queries-Cache)
+
 * Postgres setup: make sure you set all environment variables as example following and queries are reasonable for this database
 ```bash
 $ echo "export USER_NODECRUD=\"xxx\"" >> ~/.bashrc
