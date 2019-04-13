@@ -52,7 +52,8 @@ public:
     cache = _cache;
   }
 
-  vector<vector<string> > executeQuery(string query){
+  vector<vector<string> > executeQuery(char type, string query){
+    if (type == 'r'){
     if(cache and lru_cache.hasKey(query)){
       log.push_back(clock());
       return lru_cache.get(query);
@@ -79,6 +80,10 @@ public:
 
     log.push_back(clock());
     return output;
+    }
+    else{
+
+}
   }
 
   void printQueryOutput(vector<vector<string> > &output){
@@ -115,9 +120,9 @@ class thread_readdata {
 public:
     void operator()(string columns, string table) 
     { 
-        string query = "SELECT" + columns + "FROM" + table;
+        string query = "SELECT " + columns + " FROM " + table;
     	cout << "Starting thread - reader" << endl;
-      	askquery(query);
+      	askquery('r', query);
 	cout << "Ending thread - reader" << endl;
     } 
 };
@@ -128,7 +133,7 @@ public:
     { 
         string query = "INSERT INTO" + table + "VALUES" + "(" + id + "," + name + "," + email + ")";
     	cout << "Starting thread - inserting data" << endl;
-      	askquery(query);
+      	askquery('w', query);
 	cout << "Ending thread - inserting data" << endl;
     } 
 };
@@ -139,16 +144,16 @@ public:
     { 
         string query = "DELETE FROM" + table + "WHERE" + "Id=" + id;
     	cout << "Starting thread - removing data" << endl;
-	askquery(query);
+	askquery('w', query);
       	cout << "Ending thread - removing data" << endl;
     } 
 };
 
-void askquery(string query) {
+void askquery(char type, string query) {
 	mtx.lock(); 
 	Postgres postgres(true);
     	vector<vector<string>> response;
-	response = postgres.executeQuery(query);
+	response = postgres.executeQuery(type, query);
       	postgres.printQueryOutput(response);
 	mtx.unlock();
 }
@@ -172,20 +177,23 @@ int main()
     else
       cout << "Directory created" << endl;
 
+    std::thread threads_read[5];
+    std::thread threads_insdata[5];
+    std::thread threads_remdata[5];
     string query = "SELECT id, name, email  FROM users";
-    Postgres postgres(false);
-    vector<vector<string> > response;
+    
     cout << "Starting no caching queries" << endl;
-    for(int i=0;i<10;i++){
-      response = postgres.executeQuery(query);
+    for(int i=0;i<5;i++){
+      threads_read[i] = std::thread(thread_readdata(), "id, name, email", "users");
+      threads_insdata[i] = std::thread(thread_insertdata(), "i", "Teste " + i, "teste" + i + "@gmail.com", "users");
+      threads_remdata[i] = std::thread(thread_removedata(), "i", "users");
+      // response = postgres.executeQuery(query);
       // postgres.printQueryOutput(response);
-      cout << "iteration " << i << " done" << endl;
+      // cout << "iteration " << i << " done" << endl;
     }
     postgres.writeLog(path);
     cout << "Average clock ticks: " << postgres.avgClockTicks() << endl;
 
-    Postgres postgres2(true);
-    response =   vector<vector<string> >();
     cout << "Starting caching queries" << endl;
     for(int i=0;i<10;i++){
       response = postgres2.executeQuery(query);
