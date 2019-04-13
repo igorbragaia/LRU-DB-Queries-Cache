@@ -62,21 +62,23 @@ class Postgres{
 			vector<string> single_output;
 			try {
 				pqxx::connection c(connection_str);
-				pqxx::work txn(c);				
+				pqxx::work txn(c);
+				pqxx::result R;			
 				if(type == 'w'){
-        				pqxx::work write(c);
+					pqxx::connection d(connection_str);        				
+					pqxx::work write(d);
         				write.exec(query);
 					write.commit();
-					pqxx::result R = txn.exec("SELECT * from users");				
+					R = txn.exec("SELECT * from users");				
 				}       				
-				else pqxx::result R = txn.exec(query); 				       				
+				else R = txn.exec(query); 				       				
        				for (pqxx::result::const_iterator cc = R.begin(); cc != R.end(); ++cc) {
          				single_output = vector<string>();
          				for(auto ccc:cc)
             					single_output.push_back(to_string(ccc));
           				output.push_back(single_output);
         			}
-       				if(cache)
+       				if(type == 'r' and cache)
          				lru_cache.put(query, output);
     			}
     			catch(const exception &e){
@@ -127,31 +129,31 @@ void askquery(char type, string query) {
 
 class thread_readdata { 
 	public:
-		void operator()(string columns, string table) { 
+		void operator()(int number, string columns, string table) { 
         		string query = "SELECT " + columns + " FROM " + table;
-    			cout << "Starting thread: reading data number " << endl;
+    			cout << "Starting thread: reading data number " << number << endl;
       			askquery('r', query);
-			cout << "Ending thread: reading data number " << endl;
+			cout << "Ending thread: reading data number " << number << endl << endl;
 		} 
 };
 
 class thread_insertdata { 
 	public:
-		void operator()(string id, string name, string email, string table) { 
+		void operator()(int number, string name, string email, string table) { 
         		string query = "INSERT INTO " + table + "(name,email)" + " VALUES" + "('" + name + "', '" + email + "')";
-    			cout << "Starting thread: inserting data number " << endl;
+    			cout << "Starting thread: inserting data number " << number << endl;
       			askquery('w', query);
-			cout << "Ending thread: inserting data number" << endl;
+			cout << "Ending thread: inserting data number " << number << endl << endl;
     		} 
 };
 
 class thread_removedata { 
 	public:
-		void operator()(string id, string table) { 
-        		string query = "DELETE FROM " + table + " WHERE " + "Id=" + id;
-    			cout << "Starting thread: removing data number" << endl;
-			askquery('w', query);
-      			cout << "Ending thread: removing data number" << endl;
+		void operator()(string table) { 
+        		//string query = "DELETE FROM " + table + " WHERE " + "Id=" + id;
+    			//cout << "Starting thread: removing data number" << number << endl;
+			//askquery('w', query);
+      			//cout << "Ending thread: removing data number" << number << endl << endl;
     		} 
 };
 
@@ -181,9 +183,9 @@ int main()
     
     cout << "Starting caching queries" << endl;
     for(int i=0;i<5;i++){
-      threads_read[i] = std::thread(thread_readdata(), "id, name, email", "users");
-      threads_insdata[i] = std::thread(thread_insertdata(), "1", "Teste", "teste@gmail.com", "users");
-      //threads_remdata[i] = std::thread(thread_removedata(), "1", "users");
+      threads_read[i] = std::thread(thread_readdata(), i, "id, name, email", "users");
+      threads_insdata[i] = std::thread(thread_insertdata(), i, "teste", "teste@gmail.com", "users");
+      //threads_remdata[i] = std::thread(thread_removedata(), i, "users");
     }
 
     for(int i=0;i<5;i++){
