@@ -108,6 +108,29 @@ public:
   }
 };
 
+class thread_reader { 
+public:
+    void operator()(string columns, string table) 
+    { 
+        // Do Something 
+    } 
+};
+
+class thread_insertdata { 
+public:
+    void operator()(string id, string name, string email) 
+    { 
+        // Do Something 
+    } 
+};
+
+class thread_removedata { 
+public:
+    void operator()(string id) 
+    { 
+        // Do Something 
+    } 
+};
 
 int main()
 {
