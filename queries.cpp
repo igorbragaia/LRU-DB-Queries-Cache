@@ -112,23 +112,41 @@ class thread_reader {
 public:
     void operator()(string columns, string table) 
     { 
-        // Do Something 
+        string query = "SELECT" + columns + "FROM" + table;
+	Postgres postgres(true);
+    	vector<vector<string> > response;
+    	cout << "Starting thread - reader" << endl;
+      	response = postgres.executeQuery(query);
+      	postgres.printQueryOutput(response);
+      	cout << "Ending thread - reader" << endl;
     } 
 };
 
 class thread_insertdata { 
 public:
-    void operator()(string id, string name, string email) 
+    void operator()(string id, string name, string email, string table) 
     { 
-        // Do Something 
+        string query = "INSERT INTO" + table + "VALUES" + "(" + id + "," + name + "," + email + ")";
+	Postgres postgres(true);
+    	vector<vector<string> > response;
+    	cout << "Starting thread - inserting data" << endl;
+      	response = postgres.executeQuery(query);
+      	postgres.printQueryOutput(response);
+      	cout << "Ending thread - inserting data" << endl;
     } 
 };
 
 class thread_removedata { 
 public:
-    void operator()(string id) 
+    void operator()(string id, string table) 
     { 
-        // Do Something 
+        string query = "DELETE FROM" + table + "WHERE" + "Id=" + id;
+    	Postgres postgres(true);
+    	vector<vector<string> > response;
+    	cout << "Starting thread - removing data" << endl;
+      	response = postgres.executeQuery(query);
+      	postgres.printQueryOutput(response);
+      	cout << "Ending thread - removing data" << endl;
     } 
 };
 
