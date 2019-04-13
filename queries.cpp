@@ -1,6 +1,8 @@
 #include<bits/stdc++.h>
 #include<sys/stat.h>
 #include<sys/types.h>
+#include<sys/time.h>
+#include<time.h>
 #include<pqxx/pqxx>
 #include<mutex>
 #include<thread>
@@ -56,7 +58,7 @@ class Postgres{
 			if(type == 'r' and cache and lru_cache.hasKey(query)){
 				log.push_back(clock());
 				return lru_cache.get(query);
-			}
+			} 
 
 			vector<vector<string>> output;
 			vector<string> single_output;
@@ -78,7 +80,7 @@ class Postgres{
             					single_output.push_back(to_string(ccc));
           				output.push_back(single_output);
         			}
-       				if(type == 'r' and cache)
+       				if(cache)
          				lru_cache.put(query, output);
     			}
     			catch(const exception &e){
@@ -174,18 +176,20 @@ int main()
       return 1;
     }
     else
-      cout << "Directory created" << endl;
+      cout << "Directory created" << endl << endl;
 
+    struct timeval start, end;
     std::thread threads_read[3];
     std::thread threads_insdata[3];
     std::thread threads_remdata[3];
-    //string query = "SELECT id, name, email  FROM users";
-    
-    cout << "Starting caching queries" << endl;
+
+    gettimeofday(&start, NULL);
+    cout << "Starting time for multithread application" << endl;    
+
     for(int i=0;i<3;i++){
-      threads_read[i] = std::thread(thread_readdata(), i+1, "id, name, email", "users");
+      threads_read[i] = std::thread(thread_readdata(), i+1, "*", "users");
       threads_insdata[i] = std::thread(thread_insertdata(), i+1, "teste", "teste@gmail.com", "users");
-      threads_remdata[i] = std::thread(thread_removedata(), i+1, 49+i, "users");
+      threads_remdata[i] = std::thread(thread_removedata(), i+1, 54+i, "users");
     }
 
     for(int i=0;i<3;i++){
@@ -193,24 +197,12 @@ int main()
       threads_insdata[i].join();
       threads_remdata[i].join();
     }
+
+    gettimeofday(&end, NULL);
+    cout << "Multihtread application ended after " << (end.tv_sec + end.tv_usec/1000000)-(start.tv_sec + start.tv_usec/1000000)<< " seconds" << endl;
+
+    //postgres->writeLog(path);
+    //cout << "Average clock ticks: " << postgres->avgClockTicks() << endl;
     
-    //postgres.writeLog(path);
-    //cout << "Average clock ticks: " << postgres.avgClockTicks() << endl;
-
-    /*cout << "Starting caching queries" << endl;
-    for(int i=0;i<10;i++){
-      response = postgres2.executeQuery(query);
-      // postgres.printQueryOutput(response);
-      cout << "iteration " << i << " done" << endl;
-    }
-    postgres2.writeLog(path);
-    cout << "Average clock ticks: " << postgres2.avgClockTicks() << endl;
-    */
-    // OUTPUT EXAMPLE - data can be seen also at https://goo.gl/oeRbiQ
-    // 17 Luis Alberto Bragaia luis.bragaia@terra.com.br
-    // 18 Mexicano mexicano@palantir.com
-    // 20 Pianista vitor.arruda@ga.ita.br
-    // 22 rfdgsd fsdf@gfmdl
-
     return 0;
 }
