@@ -52,45 +52,38 @@ class Postgres{
     			cache = _cache;
   		}
 
-		vector<vector<string> > executeQuery(char type, string query){
-			if (type == 'r'){
-				if(cache and lru_cache.hasKey(query)){
-					log.push_back(clock());
-					return lru_cache.get(query);
-				}
-
-				vector<vector<string> > output;
-				vector<string> single_output;
-				try {
-        				pqxx::connection c(connection_str);
-        				pqxx::work txn(c);
-        				pqxx::result R = txn.exec(query);
-        				for (pqxx::result::const_iterator cc = R.begin(); cc != R.end(); ++cc) {
-          					single_output = vector<string>();
-          					for(auto ccc:cc)
-            						single_output.push_back(to_string(ccc));
-          					output.push_back(single_output);
-        				}
-        				if(cache)
-          					lru_cache.put(query, output);
-    				}
-    				catch(const exception &e){
-      					cerr << e.what() << endl;
-    				}
-
-    				log.push_back(clock());
-    				return output;
+		vector<vector<string>> executeQuery(char type, string query){
+			if(type == 'r' and cache and lru_cache.hasKey(query)){
+				log.push_back(clock());
+				return lru_cache.get(query);
 			}
-			else{
-				try{
-					pqxx::connection c(connection_str);
-        				pqxx::work txn(c);
-        				txn.exec(query);
-				}
-				catch(const exception &e){
-      					cerr << e.what() << endl;
-    				}
-			}
+
+			vector<vector<string>> output;
+			vector<string> single_output;
+			try {
+				pqxx::connection c(connection_str);
+				pqxx::work txn(c);				
+				if(type == 'w'){
+        				pqxx::work write(c);
+        				write.exec(query);
+					write.commit();
+					pqxx::result R = txn.exec("SELECT * from users");				
+				}       				
+				else pqxx::result R = txn.exec(query); 				       				
+       				for (pqxx::result::const_iterator cc = R.begin(); cc != R.end(); ++cc) {
+         				single_output = vector<string>();
+         				for(auto ccc:cc)
+            					single_output.push_back(to_string(ccc));
+          				output.push_back(single_output);
+        			}
+       				if(cache)
+         				lru_cache.put(query, output);
+    			}
+    			catch(const exception &e){
+     				cerr << e.what() << endl;
+    			}
+    			log.push_back(clock());
+    			return output;
 		}
 
 		void printQueryOutput(vector<vector<string> > &output){
@@ -125,10 +118,10 @@ class Postgres{
 
 void askquery(char type, string query) {
 	mtx.lock(); 
-	Postgres postgres(true);
-    	vector<vector<string>> response;
-	response = postgres.executeQuery(type, query);
-      	postgres.printQueryOutput(response);
+	Postgres *postgres = new Postgres(true);
+	vector<vector<string>> response;
+	response = postgres->executeQuery(type, query);
+      	postgres->printQueryOutput(response);
 	mtx.unlock();
 }
 
@@ -136,19 +129,19 @@ class thread_readdata {
 	public:
 		void operator()(string columns, string table) { 
         		string query = "SELECT " + columns + " FROM " + table;
-    			cout << "Starting thread - reader" << endl;
+    			cout << "Starting thread: reading data number " << endl;
       			askquery('r', query);
-			cout << "Ending thread - reader" << endl;
+			cout << "Ending thread: reading data number " << endl;
 		} 
 };
 
 class thread_insertdata { 
 	public:
 		void operator()(string id, string name, string email, string table) { 
-        		string query = "INSERT INTO " + table + "(Id,name,email)" + " VALUES" + "(" + id + ", " + name + ", " + email + ")";
-    			cout << "Starting thread - inserting data" << endl;
+        		string query = "INSERT INTO " + table + "(name,email)" + " VALUES" + "('" + name + "', '" + email + "')";
+    			cout << "Starting thread: inserting data number " << endl;
       			askquery('w', query);
-			cout << "Ending thread - inserting data" << endl;
+			cout << "Ending thread: inserting data number" << endl;
     		} 
 };
 
@@ -156,9 +149,9 @@ class thread_removedata {
 	public:
 		void operator()(string id, string table) { 
         		string query = "DELETE FROM " + table + " WHERE " + "Id=" + id;
-    			cout << "Starting thread - removing data" << endl;
+    			cout << "Starting thread: removing data number" << endl;
 			askquery('w', query);
-      			cout << "Ending thread - removing data" << endl;
+      			cout << "Ending thread: removing data number" << endl;
     		} 
 };
 
@@ -183,19 +176,19 @@ int main()
 
     std::thread threads_read[5];
     std::thread threads_insdata[5];
-    std::thread threads_remdata[5];
+    //std::thread threads_remdata[5];
     //string query = "SELECT id, name, email  FROM users";
     
     cout << "Starting caching queries" << endl;
     for(int i=0;i<5;i++){
       threads_read[i] = std::thread(thread_readdata(), "id, name, email", "users");
-      //threads_insdata[i] = std::thread(thread_insertdata(), "1", "Teste", "teste@gmail.com", "users");
+      threads_insdata[i] = std::thread(thread_insertdata(), "1", "Teste", "teste@gmail.com", "users");
       //threads_remdata[i] = std::thread(thread_removedata(), "1", "users");
     }
 
     for(int i=0;i<5;i++){
       threads_read[i].join();
-      //threads_insdata[i].join();
+      threads_insdata[i].join();
       //threads_remdata[i].join();
     }
     
