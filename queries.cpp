@@ -6,6 +6,7 @@
 #include<thread>
 using namespace std;
 
+std::mutex mtx;
 
 class LRUcache{
 private:
@@ -115,12 +116,9 @@ public:
     void operator()(string columns, string table) 
     { 
         string query = "SELECT" + columns + "FROM" + table;
-	Postgres postgres(true);
-    	vector<vector<string> > response;
     	cout << "Starting thread - reader" << endl;
-      	response = postgres.executeQuery(query);
-      	postgres.printQueryOutput(response);
-      	cout << "Ending thread - reader" << endl;
+      	askquery(query);
+	cout << "Ending thread - reader" << endl;
     } 
 };
 
@@ -129,12 +127,9 @@ public:
     void operator()(string id, string name, string email, string table) 
     { 
         string query = "INSERT INTO" + table + "VALUES" + "(" + id + "," + name + "," + email + ")";
-	Postgres postgres(true);
-    	vector<vector<string> > response;
     	cout << "Starting thread - inserting data" << endl;
-      	response = postgres.executeQuery(query);
-      	postgres.printQueryOutput(response);
-      	cout << "Ending thread - inserting data" << endl;
+      	askquery(query);
+	cout << "Ending thread - inserting data" << endl;
     } 
 };
 
@@ -143,14 +138,20 @@ public:
     void operator()(string id, string table) 
     { 
         string query = "DELETE FROM" + table + "WHERE" + "Id=" + id;
-    	Postgres postgres(true);
-    	vector<vector<string> > response;
     	cout << "Starting thread - removing data" << endl;
-      	response = postgres.executeQuery(query);
-      	postgres.printQueryOutput(response);
+	askquery(query);
       	cout << "Ending thread - removing data" << endl;
     } 
 };
+
+void askquery(string query) {
+	mtx.lock(); 
+	Postgres postgres(true);
+    	vector<vector<string>> response;
+	response = postgres.executeQuery(query);
+      	postgres.printQueryOutput(response);
+	mtx.unlock();
+}
 
 int main()
 {
