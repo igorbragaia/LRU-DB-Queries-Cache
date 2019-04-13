@@ -82,9 +82,14 @@ class Postgres{
     				return output;
 			}
 			else{
-				pqxx::connection c(connection_str);
-        			pqxx::work txn(c);
-        			txn.exec(query);
+				try{
+					pqxx::connection c(connection_str);
+        				pqxx::work txn(c);
+        				txn.exec(query);
+				}
+				catch(const exception &e){
+      					cerr << e.what() << endl;
+    				}
 			}
 		}
 
@@ -118,6 +123,15 @@ class Postgres{
 		}
 };
 
+void askquery(char type, string query) {
+	mtx.lock(); 
+	Postgres postgres(true);
+    	vector<vector<string>> response;
+	response = postgres.executeQuery(type, query);
+      	postgres.printQueryOutput(response);
+	mtx.unlock();
+}
+
 class thread_readdata { 
 	public:
 		void operator()(string columns, string table) { 
@@ -131,7 +145,7 @@ class thread_readdata {
 class thread_insertdata { 
 	public:
 		void operator()(string id, string name, string email, string table) { 
-        		string query = "INSERT INTO" + table + "VALUES" + "(" + id + "," + name + "," + email + ")";
+        		string query = "INSERT INTO " + table + "(Id,name,email)" + " VALUES" + "(" + id + ", " + name + ", " + email + ")";
     			cout << "Starting thread - inserting data" << endl;
       			askquery('w', query);
 			cout << "Ending thread - inserting data" << endl;
@@ -141,21 +155,12 @@ class thread_insertdata {
 class thread_removedata { 
 	public:
 		void operator()(string id, string table) { 
-        		string query = "DELETE FROM" + table + "WHERE" + "Id=" + id;
+        		string query = "DELETE FROM " + table + " WHERE " + "Id=" + id;
     			cout << "Starting thread - removing data" << endl;
 			askquery('w', query);
       			cout << "Ending thread - removing data" << endl;
     		} 
 };
-
-void askquery(char type, string query) {
-	mtx.lock(); 
-	Postgres postgres(true);
-    	vector<vector<string>> response;
-	response = postgres.executeQuery(type, query);
-      	postgres.printQueryOutput(response);
-	mtx.unlock();
-}
 
 int main()
 {
@@ -179,16 +184,23 @@ int main()
     std::thread threads_read[5];
     std::thread threads_insdata[5];
     std::thread threads_remdata[5];
-    string query = "SELECT id, name, email  FROM users";
+    //string query = "SELECT id, name, email  FROM users";
     
     cout << "Starting caching queries" << endl;
     for(int i=0;i<5;i++){
       threads_read[i] = std::thread(thread_readdata(), "id, name, email", "users");
-      threads_insdata[i] = std::thread(thread_insertdata(), "i", "Teste " + i, "teste" + i + "@gmail.com", "users");
-      threads_remdata[i] = std::thread(thread_removedata(), "i", "users");
+      //threads_insdata[i] = std::thread(thread_insertdata(), "1", "Teste", "teste@gmail.com", "users");
+      //threads_remdata[i] = std::thread(thread_removedata(), "1", "users");
     }
-    postgres.writeLog(path);
-    cout << "Average clock ticks: " << postgres.avgClockTicks() << endl;
+
+    for(int i=0;i<5;i++){
+      threads_read[i].join();
+      //threads_insdata[i].join();
+      //threads_remdata[i].join();
+    }
+    
+    //postgres.writeLog(path);
+    //cout << "Average clock ticks: " << postgres.avgClockTicks() << endl;
 
     /*cout << "Starting caching queries" << endl;
     for(int i=0;i<10;i++){
