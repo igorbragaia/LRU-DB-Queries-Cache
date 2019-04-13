@@ -9,26 +9,25 @@
 #include<thread>
 using namespace std;
 
-
 /* -------------------- Class LRU_cache -------------------- */
 /* Implements a hashtable to save queries recetly used.      */
 /* Criteria for substitution is Least Recently Used (LRU).   */
 class LRUcache{
 	private:
-		unordered_map<string, vector<vector<string>>> hashtable;
+		unordered_map<string, vector<vector<string>>> hashtable; // hashtable
 	public:
-		bool hasKey(string query){
+		bool hasKey(string query){ // returns true if query is found in hash table
 			return (hashtable.find(query) != hashtable.end());
 		}
 
-		vector<vector<string>> get(string query){
+		vector<vector<string>> get(string query){ // returns correspondent output for a query
 			if(hasKey(query))
 				return hashtable[query];
 			else
 				return vector<vector<string>>();
 		}
 
-		void put(string query, vector<vector<string>> &response){
+		void put(string query, vector<vector<string>> &response){ // puts new element in hash table
 			hashtable[query] = response;
   		}
 };
@@ -39,11 +38,11 @@ class LRUcache{
 /* If query type is 'write', it returns the whole database.  */
 class Postgres{
 	private:
-		string connection_str;
-		bool cache;
-		LRUcache lru_cache;
+		string connection_str; // holds settings to access PostgreSQL database
+		bool cache; // variable that determines if cache option is enabled
+		LRUcache lru_cache; // variable that implements cache (a hashtable, in this case)
 	public:				
-		Postgres(bool _cache){
+		Postgres(bool _cache){ // constructor: establishes connection to database
 			try{
 				string host = getenv ("HOST_NODECRUD");
 				string dbname = getenv ("DATABASE_NODECRUD");
@@ -57,7 +56,7 @@ class Postgres{
     			cache = _cache;
   		}
 
-		vector<vector<string>> executeQuery(char type, string query){
+		vector<vector<string>> executeQuery(char type, string query){ // executes a query, returning its output
 			if(type == 'r' and cache and lru_cache.hasKey(query)){
 				return lru_cache.get(query);
 			} 
@@ -88,38 +87,28 @@ class Postgres{
     			catch(const exception &e){
      				cerr << e.what() << endl;
     			}
-    			//log.push_back(clock());
     			return output;
 		}
 
-		void printQueryOutput(vector<vector<string>> &output){
+		void printQueryOutput(vector<vector<string>> &output){ // prints an output from a query
 			for(vector<string> arr:output){
 				for(string str:arr)
 					cout << str << " ";
 				cout << endl;
 			}
 		}
-
-		/*void writeLog(string path){
-			ofstream myfile;
-			string file_name = cache?"logCacheEnabled.txt":"logCacheDisabled.txt";
-			file_name = path + "/" + file_name;
-			myfile.open (file_name);
-			for(unsigned int elm:log)
-				myfile << elm << endl;
-			myfile.close();
-		}*/
-
-		void enableCache(){
-			cache = true;
-		}
 };
 
-/* Global variables */
-std::mutex mtx;
-Postgres postgres_seq(true);
-Postgres postgres_thr(true);
+/* -------------------- Global variables -------------------- */
+std::mutex mtx; // mutex locker variable
+Postgres postgres_seq(true); // postgress acces for sequential application
+Postgres postgres_thr(true); // postgress acces for multithread application
 
+/* ------------------ Functions 'ask query' ----------------- */
+/* Function responsable to call executeQuery from Postgres.   */
+/* There are two functions: one for multithread and other for */
+/* sequential.                                                */
+/* It implements mutex lock() for multithread scenario.       */
 void askquery_thr(char type, string query) {
 	mtx.lock(); 
 	vector<vector<string>> response;
@@ -134,6 +123,8 @@ void askquery_seq(char type, string query) {
       	::postgres_seq.printQueryOutput(response);
 }
 
+/* ----------------- Class thread_readdata ----------------- */
+/* Thread in charge of queries like 'SELECT x from y'.       */
 class thread_readdata { 
 	public:
 		void operator()(int number, string columns, string table) { 
@@ -144,6 +135,8 @@ class thread_readdata {
 		} 
 };
 
+/* ----------------- Class thread_insertdata --------------- */
+/* Thread in charge of queries like 'INSERT INTO x VALUES y'.*/
 class thread_insertdata { 
 	public:
 		void operator()(int number, string name, string email, string table) { 
@@ -154,6 +147,8 @@ class thread_insertdata {
     		} 
 };
 
+/* ----------------- Class thread_removedata --------------- */
+/* Thread in charge of queries like 'DELETE FROM x WHERE y'. */
 class thread_removedata { 
 	public:
 		void operator()(int number, int id, string table) {          		
@@ -164,7 +159,7 @@ class thread_removedata {
     		} 
 };
 
-
+/* ---------------------- Main function -------------------- */
 int main()
 {
     srand (time(NULL));
