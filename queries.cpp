@@ -2,6 +2,8 @@
 #include<sys/stat.h>
 #include<sys/types.h>
 #include<pqxx/pqxx>
+#include<mutex>
+#include<thread>
 using namespace std;
 
 
@@ -108,7 +110,7 @@ public:
   }
 };
 
-class thread_reader { 
+class thread_readdata { 
 public:
     void operator()(string columns, string table) 
     { 
