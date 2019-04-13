@@ -26,20 +26,23 @@ class LRUcache{
 		}
 
 		void put(string query, vector<vector<string> > &response){
-			if(!hasKey(query)){
-				hashtable[query] = response;
-    			}
+			hashtable[query] = response;
   		}
+
+		void reset(){
+			hashtable.clear();
+		}
+
 };
 
 
 class Postgres{
 	private:
 		string connection_str;
-		LRUcache lru_cache;
 		bool cache;
 		vector<unsigned int>log;
-	public:
+	public:		
+		LRUcache lru_cache;
 		Postgres(bool _cache){
 			try{
 				string host = getenv ("HOST_NODECRUD");
@@ -120,9 +123,10 @@ class Postgres{
 		}
 };
 
+Postgres *postgres = new Postgres(true);
+
 void askquery(char type, string query) {
 	mtx.lock(); 
-	Postgres *postgres = new Postgres(true);
 	vector<vector<string>> response;
 	response = postgres->executeQuery(type, query);
       	postgres->printQueryOutput(response);
@@ -178,28 +182,46 @@ int main()
     else
       cout << "Directory created" << endl << endl;
 
-    struct timeval start, end;
-    std::thread threads_read[3];
-    std::thread threads_insdata[3];
-    std::thread threads_remdata[3];
+    struct timeval start, end, startseq, endseq;
+    std::thread threads_read[2];
+    std::thread threads_insdata[2];
+    std::thread threads_remdata[2];
 
     gettimeofday(&start, NULL);
     cout << "Starting time for multithread application" << endl;    
 
-    for(int i=0;i<3;i++){
+    for(int i=0;i<2;i++){
       threads_read[i] = std::thread(thread_readdata(), i+1, "*", "users");
       threads_insdata[i] = std::thread(thread_insertdata(), i+1, "teste", "teste@gmail.com", "users");
-      threads_remdata[i] = std::thread(thread_removedata(), i+1, 54+i, "users");
+      threads_remdata[i] = std::thread(thread_removedata(), i+1, 103+i, "users");
     }
 
-    for(int i=0;i<3;i++){
+    for(int i=0;i<2;i++){
       threads_read[i].join();
       threads_insdata[i].join();
       threads_remdata[i].join();
     }
 
     gettimeofday(&end, NULL);
-    cout << "Multihtread application ended after " << (end.tv_sec + end.tv_usec/1000000)-(start.tv_sec + start.tv_usec/1000000)<< " seconds" << endl;
+    cout << "Multithread application ended after " << (end.tv_sec + end.tv_usec/1000000)-(start.tv_sec + start.tv_usec/1000000)<< " seconds" << endl;
+
+    postgres->lru_cache.reset();
+
+    gettimeofday(&startseq, NULL);
+    cout << "Starting time for sequential application" << endl;
+
+    askquery('r', "SELECT * from users");
+    askquery('w', "INSERT INTO users(name, email) VALUES ('teste', 'teste@gmail.com')");
+    askquery('w', "DELETE FROM users WHERE Id=90");
+    askquery('r', "SELECT * from users");
+    askquery('w', "INSERT INTO users(name, email) VALUES ('teste', 'teste@gmail.com')");
+    askquery('w', "DELETE FROM users WHERE Id=91");
+    //askquery('r', "SELECT * from users");
+    //askquery('w', "INSERT INTO users(name, email) VALUES (teste, teste@gmail.com)");
+    //askquery('w', "DELETE FROM users WHERE Id=77");
+
+    gettimeofday(&endseq, NULL);
+    cout << "Sequential application ended after " << (endseq.tv_sec + endseq.tv_usec/1000000)-(startseq.tv_sec + startseq.tv_usec/1000000)<< " seconds" << endl;
 
     //postgres->writeLog(path);
     //cout << "Average clock ticks: " << postgres->avgClockTicks() << endl;
