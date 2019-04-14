@@ -1,4 +1,4 @@
-DROP TABLE table1;
+-- DROP TABLE table1;
 
 CREATE TABLE table1(
  id serial PRIMARY KEY,

@@ -224,53 +224,53 @@ int main()
 	  createQueries queriesobj;
 		queriesobj.getSELECTqueries(true);
 
-    // // Local variables: related to time counting and creation of threads
-    // struct timeval start, end, startseq, endseq;
-    // std::thread threads_read[3];
-    // std::thread threads_insdata[3];
-    // std::thread threads_remdata[3];
-		//
-    // // Starting multithread application
-    // gettimeofday(&start, NULL);
-    // cout << "Starting time for multithread application" << endl;
-		//
-    // for(int i=0;i<3;i++){
-    //   threads_read[i] = std::thread(thread_readdata(), i+1, "Id, name", "users");
-    //   threads_insdata[i] = std::thread(thread_insertdata(), i+1, "teste_thr" + std::to_string(i+1), "teste_thr" + std::to_string(i+1) + "@gmail.com", "users");
-    //   threads_remdata[i] = std::thread(thread_removedata(), i+1, 103+i, "users");
-    // }
-		//
-    // for(int i=0;i<3;i++){
-    //   threads_read[i].join();
-    //   threads_insdata[i].join();
-    //   threads_remdata[i].join();
-    // }
-		//
-    // // Ending multithread application
-    // gettimeofday(&end, NULL);
-    // cout << "Multithread application ended after " << (end.tv_sec + end.tv_usec/1000000.0)-(start.tv_sec + start.tv_usec/1000000.0)<< " seconds" << endl;
-		//
-    // // Starting sequential application
-    // gettimeofday(&startseq, NULL);
-    // cout << "Starting time for sequential application" << endl;
-		//
-    // for (int i=0; i<3; i++){
-		// 	cout << endl << "Starting job: reading data number " << i+1 << endl;
-		// 	askquery_seq('r', "SELECT Id, name from users");
-		// 	cout << "Ending job: reading data number " << i+1 << endl << endl;
-		//
-		// 	cout << endl << "Starting job: inserting data number " << i+1 << endl;
-		//         askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste_seq" + std::to_string(i+1) + "', 'teste_seq" + std::to_string(i+1) + "@gmail.com')");
-		// 	cout << "Ending job: inserting data number " << i+1 << endl << endl;
-		//
-		//         cout << endl << "Starting job: inserting data number " << i+1 << endl;
-		// 	askquery_seq('w', "DELETE FROM users WHERE Id=90");
-		// 	cout << "Ending job: removing data number " << i+1 << endl << endl;
-    // }
-		//
-    // // Ending sequential application
-    // gettimeofday(&endseq, NULL);
-    // cout << "Sequential application ended after " << (endseq.tv_sec + endseq.tv_usec/1000000.0)-(startseq.tv_sec + startseq.tv_usec/1000000.0)<< " seconds" << endl;
+    // Local variables: related to time counting and creation of threads
+    struct timeval start, end, startseq, endseq;
+    std::thread threads_read[3];
+    std::thread threads_insdata[3];
+    std::thread threads_remdata[3];
+
+    // Starting multithread application
+    gettimeofday(&start, NULL);
+    cout << "Starting time for multithread application" << endl;
+
+    for(int i=0;i<3;i++){
+      threads_read[i] = std::thread(thread_readdata(), i+1, "Id, name", "users");
+      threads_insdata[i] = std::thread(thread_insertdata(), i+1, "teste_thr" + std::to_string(i+1), "teste_thr" + std::to_string(i+1) + "@gmail.com", "users");
+      threads_remdata[i] = std::thread(thread_removedata(), i+1, 103+i, "users");
+    }
+
+    for(int i=0;i<3;i++){
+      threads_read[i].join();
+      threads_insdata[i].join();
+      threads_remdata[i].join();
+    }
+
+    // Ending multithread application
+    gettimeofday(&end, NULL);
+    cout << "Multithread application ended after " << (end.tv_sec + end.tv_usec/1000000.0)-(start.tv_sec + start.tv_usec/1000000.0)<< " seconds" << endl;
+
+    // Starting sequential application
+    gettimeofday(&startseq, NULL);
+    cout << "Starting time for sequential application" << endl;
+
+    for (int i=0; i<3; i++){
+			cout << endl << "Starting job: reading data number " << i+1 << endl;
+			askquery_seq('r', "SELECT Id, name from users");
+			cout << "Ending job: reading data number " << i+1 << endl << endl;
+
+			cout << endl << "Starting job: inserting data number " << i+1 << endl;
+		        askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste_seq" + std::to_string(i+1) + "', 'teste_seq" + std::to_string(i+1) + "@gmail.com')");
+			cout << "Ending job: inserting data number " << i+1 << endl << endl;
+
+		        cout << endl << "Starting job: inserting data number " << i+1 << endl;
+			askquery_seq('w', "DELETE FROM users WHERE Id=90");
+			cout << "Ending job: removing data number " << i+1 << endl << endl;
+    }
+
+    // Ending sequential application
+    gettimeofday(&endseq, NULL);
+    cout << "Sequential application ended after " << (endseq.tv_sec + endseq.tv_usec/1000000.0)-(startseq.tv_sec + startseq.tv_usec/1000000.0)<< " seconds" << endl;
 
     return 0;
 }
