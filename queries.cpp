@@ -162,64 +162,49 @@ class thread_removedata {
 /* ---------------------- Main function -------------------- */
 int main()
 {
-    srand (time(NULL));
-    if (mkdir("log", 0777) == -1)
-      cerr << "Log directory Error :  " << strerror(errno) << endl;
-    else
-      cout << "Log Directory created" << endl;
+    // Local variables: related to time counting and creation of threads
+    struct timeval start, end, startseq, endseq; 
+    std::thread threads_read[3];
+    std::thread threads_insdata[3];
+    std::thread threads_remdata[3];
 
-    int id = rand()%2019;
-    string path = "log/" + to_string(id);
-    // Creating a directory
-    cout << path << endl;
-    if (mkdir(path.c_str(), 0777) == -1){
-      cerr << "Error :  " << strerror(errno) << endl;
-      return 1;
-    }
-    else
-      cout << "Directory created" << endl << endl;
-
-    struct timeval start, end, startseq, endseq;
-    std::thread threads_read[2];
-    std::thread threads_insdata[2];
-    std::thread threads_remdata[2];
-
+    // Starting multithread application
     gettimeofday(&start, NULL);
     cout << "Starting time for multithread application" << endl;    
 
-    for(int i=0;i<2;i++){
+    for(int i=0;i<3;i++){
       threads_read[i] = std::thread(thread_readdata(), i+1, "Id, name", "users");
-      threads_insdata[i] = std::thread(thread_insertdata(), i+1, "teste", "teste@gmail.com", "users");
+      threads_insdata[i] = std::thread(thread_insertdata(), i+1, "teste_thr" + std::to_string(i+1), "teste_thr" + std::to_string(i+1) + "@gmail.com", "users");
       threads_remdata[i] = std::thread(thread_removedata(), i+1, 103+i, "users");
     }
 
-    for(int i=0;i<2;i++){
+    for(int i=0;i<3;i++){
       threads_read[i].join();
       threads_insdata[i].join();
       threads_remdata[i].join();
     }
 
+    // Ending multithread application
     gettimeofday(&end, NULL);
     cout << "Multithread application ended after " << (end.tv_sec + end.tv_usec/1000000)-(start.tv_sec + start.tv_usec/1000000)<< " seconds" << endl;
 
+    // Starting sequential application
     gettimeofday(&startseq, NULL);
     cout << "Starting time for sequential application" << endl;
 
-    askquery_seq('r', "SELECT * from users");
-    askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste', 'teste@gmail.com')");
+    askquery_seq('r', "SELECT Id, name from users");
+    askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste_seq1', 'teste_seq1@gmail.com')");
     askquery_seq('w', "DELETE FROM users WHERE Id=90");
-    askquery_seq('r', "SELECT * from users");
-    askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste', 'teste@gmail.com')");
+    askquery_seq('r', "SELECT Id, name from users");
+    askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste_seq2', 'teste_seq2@gmail.com')");
     askquery_seq('w', "DELETE FROM users WHERE Id=91");
-    //askquery('r', "SELECT * from users");
-    //askquery('w', "INSERT INTO users(name, email) VALUES (teste, teste@gmail.com)");
-    //askquery('w', "DELETE FROM users WHERE Id=77");
+    askquery_seq('r', "SELECT Id, name from users");
+    askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste_seq3', 'teste_seq3@gmail.com')");
+    askquery_seq('w', "DELETE FROM users WHERE Id=77");
 
+    // Ending sequential application
     gettimeofday(&endseq, NULL);
-    cout << "Sequential application ended after " << (endseq.tv_sec + endseq.tv_usec/1000000)-(startseq.tv_sec + startseq.tv_usec/1000000)<< " seconds" << endl;
+    cout << "Sequential application ended after " << (endseq.tv_sec + endseq.tv_usec/1000000.0)-(startseq.tv_sec + startseq.tv_usec/1000000.0)<< " seconds" << endl;
 
-    //postgres->writeLog(path);
-    //cout << "Average clock ticks: " << postgres->avgClockTicks() << endl;
-    
     return 0;
 }
