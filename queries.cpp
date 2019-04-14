@@ -91,11 +91,13 @@ class Postgres{
 		}
 
 		void printQueryOutput(vector<vector<string>> &output){ // prints an output from a query
+			cout << "Printing query output..." << endl;
 			for(vector<string> arr:output){
 				for(string str:arr)
 					cout << str << " ";
 				cout << endl;
 			}
+			cout << endl;
 		}
 };
 
@@ -186,22 +188,26 @@ int main()
 
     // Ending multithread application
     gettimeofday(&end, NULL);
-    cout << "Multithread application ended after " << (end.tv_sec + end.tv_usec/1000000)-(start.tv_sec + start.tv_usec/1000000)<< " seconds" << endl;
+    cout << "Multithread application ended after " << (end.tv_sec + end.tv_usec/1000000.0)-(start.tv_sec + start.tv_usec/1000000.0)<< " seconds" << endl;
 
     // Starting sequential application
     gettimeofday(&startseq, NULL);
     cout << "Starting time for sequential application" << endl;
 
-    askquery_seq('r', "SELECT Id, name from users");
-    askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste_seq1', 'teste_seq1@gmail.com')");
-    askquery_seq('w', "DELETE FROM users WHERE Id=90");
-    askquery_seq('r', "SELECT Id, name from users");
-    askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste_seq2', 'teste_seq2@gmail.com')");
-    askquery_seq('w', "DELETE FROM users WHERE Id=91");
-    askquery_seq('r', "SELECT Id, name from users");
-    askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste_seq3', 'teste_seq3@gmail.com')");
-    askquery_seq('w', "DELETE FROM users WHERE Id=77");
+    for (int i=0; i<3; i++){
+	cout << endl << "Starting job: reading data number " << i+1 << endl;	
+	askquery_seq('r', "SELECT Id, name from users");
+	cout << "Ending job: reading data number " << i+1 << endl << endl;	
 
+	cout << endl << "Starting job: inserting data number " << i+1 << endl;
+        askquery_seq('w', "INSERT INTO users(name, email) VALUES ('teste_seq" + std::to_string(i+1) + "', 'teste_seq" + std::to_string(i+1) + "@gmail.com')");
+	cout << "Ending job: inserting data number " << i+1 << endl << endl;
+
+        cout << endl << "Starting job: inserting data number " << i+1 << endl;
+	askquery_seq('w', "DELETE FROM users WHERE Id=90");    
+	cout << "Ending job: removing data number " << i+1 << endl << endl;    
+    }
+    
     // Ending sequential application
     gettimeofday(&endseq, NULL);
     cout << "Sequential application ended after " << (endseq.tv_sec + endseq.tv_usec/1000000.0)-(startseq.tv_sec + startseq.tv_usec/1000000.0)<< " seconds" << endl;
