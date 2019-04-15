@@ -160,60 +160,57 @@ class thread_removedata {
     		}
 };
 
-
-class createQueries{
-private:
-	vector<vector<string>> subsetsWithDup(vector<string>& nums) {
-			vector<int> bitmask{0}, aux;
-			vector<string> current;
-			set<vector<string>>response_set;
-			vector<vector<string>>response;
-			for(int i = 0; i < (int)nums.size(); i++){
-				aux = bitmask;
-				for(int j = 0; j < (int)aux.size(); j++)
-					bitmask.push_back(aux[j] | 1<<i);
-			}
-			for(int i = 0; i < (int)bitmask.size(); i++){
-				current = vector<string>();
-				for(int j = 0; j < (int)nums.size(); j++)
-					if(1 << j & bitmask[i])
-						current.push_back(nums[j]);
-				sort(current.begin(), current.end());
-				response_set.insert(current);
-			}
-			for(set<vector<string>>::iterator it=response_set.begin(); it!=response_set.end();it++)
-					response.push_back(*it);
-			return response;
+/* ----------------- Function subsetsWithDup --------------- */
+/* Class responsable for creating the subsets of the set of  */
+/* all the columns names. in charge of                       */
+vector<vector<string>> subsetsWithDup(vector<string>& nums) { 
+	vector<int> bitmask{0}, aux;
+	vector<string> current;
+	set<vector<string>>response_set;
+	vector<vector<string>>response;
+	for(int i = 0; i < (int)nums.size(); i++){
+		aux = bitmask;
+		for(int j = 0; j < (int)aux.size(); j++)
+			bitmask.push_back(aux[j] | 1<<i);
 	}
+	for(int i = 0; i < (int)bitmask.size(); i++){
+		current = vector<string>();
+		for(int j = 0; j < (int)nums.size(); j++)
+			if(1 << j & bitmask[i])
+				current.push_back(nums[j]);
+		sort(current.begin(), current.end());				
+		response_set.insert(current);
+	}
+	for(set<vector<string>>::iterator it=response_set.begin(); it!=response_set.end();it++)
+		response.push_back(*it);
+	return response;
+}
 
-	vector<string> getSELECTqueries(vector<string>cols, string table){
-		vector<string>queries;
-		vector<vector<string>>subsets=subsetsWithDup(cols);
-		string query;
-		for(vector<string>set:subsets){
-			query = "SELECT";
-			for(int i=0;i<(int)set.size();i++){
-				query += " " + set[i];
-				if(i != (int)set.size()-1)
+/* ---------------- Function getSELECTqueries -------------- */
+/* Returns vector with all the possibilities of 'SELECT      */
+/* queries' and possibly prints it.                           */
+vector<string> getSELECTqueries(bool print, vector<string> cols, string table){ // 
+	vector<string> queries;
+	vector<vector<string>> subsets = subsetsWithDup(cols);
+	string query;
+	for(vector<string>set:subsets){
+		query = "SELECT";
+		for(int i=0;i<(int)set.size();i++){
+			query += " " + set[i];
+			if(i != (int)set.size()-1)
 				query += ",";
-			}
-			query += " FROM " + table;
-			queries.push_back(query);
 		}
-		return queries;
+		query += " FROM " + table;
+		queries.push_back(query);
 	}
-
-public:
-	vector<string> getSELECTqueries(bool print, vector<string> cols, string table){
-		vector<string>queries = getSELECTqueries(cols, table);
-		if(print){
-			cout << "PRINTING " << queries.size() << " different queries for the specified database!" << endl;
-			for(string query:queries)
+	if(print){
+		cout << "PRINTING " << queries.size() << " different queries for the specified database!" << endl;
+		for(string query:queries)
 			cout << query << endl;
-		}
-		return queries;
 	}
-};
+	cout << endl;
+	return queries;
+}
 
 /* ---------------------- Main function -------------------- */
 int main()
@@ -223,15 +220,14 @@ int main()
     std::thread threads_read[3];
     std::thread threads_insdata[3];
     std::thread threads_remdata[3];
-    createQueries queries_obj;
-    vector<string> columns;
-    string database, queries;
+    vector<string> columns, queries;
+    string database;
     int randomquery, queries_size;
 
     // Initial assignments: related to getting random 'SELECT queries'
-    columns = {"Id, Name, Email"};
+    columns = {"Id", "Name", "Email"};
     database = "users";
-    queries = queries_obj.getSELECTqueries(true, columns, database);
+    queries = getSELECTqueries(true, columns, database);
     queries_size = queries.size();
 
     // Starting multithread application
