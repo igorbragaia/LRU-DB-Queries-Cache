@@ -129,9 +129,8 @@ void askquery_seq(char type, string query) {
 /* Thread in charge of queries like 'SELECT x from y'.       */
 class thread_readdata {
 	public:
-		void operator()(int number, string columns, string table) {
+		void operator()(int number, string query) {
 			cout << endl << "Starting thread: reading data number " << number << endl;
-			string query = "SELECT " + columns + " FROM " + table;
       			askquery_thr('r', query);
 			cout << "Ending thread: reading data number " << number << endl << endl;
 		}
@@ -219,7 +218,7 @@ public:
 /* ---------------------- Main function -------------------- */
 int main()
 {
-    // Initial declarations: variables related to time counting, possible queries of database and creation of threads
+    // Initial declarations: variables related to time counting, possible 'SELECT queries' of database and creation of threads
     struct timeval start, end, startseq, endseq;
     std::thread threads_read[3];
     std::thread threads_insdata[3];
@@ -227,18 +226,21 @@ int main()
     createQueries queries_obj;
     vector<string> columns;
     string database, queries;
+    int randomquery, queries_size;
 
-    // Initial assignments: related to getting random queries
+    // Initial assignments: related to getting random 'SELECT queries'
     columns = {"Id, Name, Email"};
     database = "users";
     queries = queries_obj.getSELECTqueries(true, columns, database);
+    queries_size = queries.size();
 
     // Starting multithread application
     gettimeofday(&start, NULL);
     cout << "Starting time for multithread application" << endl;
 
     for(int i=0;i<3;i++){
-      threads_read[i] = std::thread(thread_readdata(), i+1, "Id, name", "users");
+      randomquery =  rand() % queries_size;
+      threads_read[i] = std::thread(thread_readdata(), i+1, queries[randomquery]);
       threads_insdata[i] = std::thread(thread_insertdata(), i+1, "teste_thr" + std::to_string(i+1), "teste_thr" + std::to_string(i+1) + "@gmail.com", "users");
       threads_remdata[i] = std::thread(thread_removedata(), i+1, 103+i, "users");
     }
@@ -259,7 +261,8 @@ int main()
 
     for (int i=0; i<3; i++){
 			cout << endl << "Starting job: reading data number " << i+1 << endl;
-			askquery_seq('r', "SELECT Id, name from users");
+			randomquery =  rand() % queries_size;			
+			askquery_seq('r', queries[randomquery]);
 			cout << "Ending job: reading data number " << i+1 << endl << endl;
 
 			cout << endl << "Starting job: inserting data number " << i+1 << endl;
