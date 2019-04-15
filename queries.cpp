@@ -9,7 +9,6 @@
 #include<thread>
 using namespace std;
 
-
 /* -------------------- Class LRU_cache -------------------- */
 /* Implements a hashtable to save queries recetly used.      */
 /* Criteria for substitution is Least Recently Used (LRU).   */
@@ -188,7 +187,7 @@ private:
 			return response;
 	}
 
-	vector<string> getSELECTqueries(vector<string>cols){
+	vector<string> getSELECTqueries(vector<string>cols, string table){
 		vector<string>queries;
 		vector<vector<string>>subsets=subsetsWithDup(cols);
 		string query;
@@ -199,18 +198,17 @@ private:
 				if(i != (int)set.size()-1)
 				query += ",";
 			}
-			query += " FROM table1";
+			query += " FROM " + table;
 			queries.push_back(query);
 		}
 		return queries;
 	}
 
 public:
-	vector<string> getSELECTqueries(bool print){
-		vector<string>cols{"col1","col2","col3","col4","col5","col6","col7","col8","col9"};
-		vector<string>queries=getSELECTqueries(cols);
+	vector<string> getSELECTqueries(bool print, vector<string> cols, string table){
+		vector<string>queries = getSELECTqueries(cols, table);
 		if(print){
-			cout << "PRINTING " << queries.size() << " different queries!" << endl;
+			cout << "PRINTING " << queries.size() << " different queries for the specified database!" << endl;
 			for(string query:queries)
 			cout << query << endl;
 		}
@@ -221,14 +219,19 @@ public:
 /* ---------------------- Main function -------------------- */
 int main()
 {
-	  createQueries queriesobj;
-		queriesobj.getSELECTqueries(true);
-
-    // Local variables: related to time counting and creation of threads
+    // Initial declarations: variables related to time counting, possible queries of database and creation of threads
     struct timeval start, end, startseq, endseq;
     std::thread threads_read[3];
     std::thread threads_insdata[3];
     std::thread threads_remdata[3];
+    createQueries queries_obj;
+    vector<string> columns;
+    string database, queries;
+
+    // Initial assignments: related to getting random queries
+    columns = {"Id, Name, Email"};
+    database = "users";
+    queries = queries_obj.getSELECTqueries(true, columns, database);
 
     // Starting multithread application
     gettimeofday(&start, NULL);
